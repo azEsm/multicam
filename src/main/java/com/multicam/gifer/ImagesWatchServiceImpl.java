@@ -3,12 +3,12 @@ package com.multicam.gifer;
 import com.multicam.image.GifImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -20,8 +20,8 @@ public class ImagesWatchServiceImpl implements ImagesWatchService {
     private final Path photoDir;
     private final String gifDir;
 
-    public ImagesWatchServiceImpl(String photoDir, String gifDir) {
-        this.photoDir = Paths.get(photoDir);
+    public ImagesWatchServiceImpl(String photoDir, String gifDir) throws IOException {
+        this.photoDir = new ClassPathResource(photoDir).getFile().toPath();
         this.gifDir = gifDir;
     }
 
@@ -60,8 +60,16 @@ public class ImagesWatchServiceImpl implements ImagesWatchService {
                     continue;
                 }
 
-                new GifImage(new File(gifDir), Arrays.asList(files)).save();
+                new GifImage(new ClassPathResource(gifDir).getFile(), Arrays.asList(files)).save();
+
+                deleteImages(files);
             }
+        }
+    }
+
+    private void deleteImages(String[] files) {
+        for (String fileName : files) {
+            new File(photoDir.toFile(), fileName).delete();
         }
     }
 }

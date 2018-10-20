@@ -2,25 +2,23 @@ package com.multicam.image;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class BmpImage implements Image {
     private final Logger log = LoggerFactory.getLogger(BmpImage.class);
 
     private final String fileName;
-    private final String outputDir;
+    private final String outputDirName;
     private final int[][] rgbValues;
     private final byte[] bytes;
 
-    public BmpImage(String outputDir, String filename, int[][] rgbValues) {
+    public BmpImage(String outputDirName, String filename, int[][] rgbValues) {
         this.fileName = filename;
-        this.outputDir = outputDir;
+        this.outputDirName = outputDirName;
         this.rgbValues = rgbValues;
         bytes = new byte[54 + 3 * rgbValues.length * rgbValues[0].length];
     }
@@ -28,7 +26,7 @@ public class BmpImage implements Image {
     @Override
     public void save() {
         checkOutputDirectory();
-        try (FileOutputStream fos = new FileOutputStream(new File(outputDir, fileName))) {
+        try (FileOutputStream fos = new FileOutputStream(new File(new ClassPathResource(outputDirName).getFile(), fileName))) {
             saveFileHeader();
             saveInfoHeader(rgbValues.length, rgbValues[0].length);
             saveBitmapData(rgbValues);
@@ -40,13 +38,15 @@ public class BmpImage implements Image {
     }
 
     private void checkOutputDirectory() {
-        Path outputDir = Paths.get(this.outputDir);
-        if (Files.exists(outputDir)) {
+        ClassPathResource outputDirResource = new ClassPathResource(outputDirName);
+        if (outputDirResource.exists()) {
             return;
         }
 
         try {
-            Files.createDirectories(outputDir);
+            if (!outputDirResource.getFile().mkdirs()) {
+                throw new IllegalStateException("directory creating error");
+            }
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }

@@ -97,8 +97,8 @@ public class GifImage {
     public void save() {
         checkOutputDirectory();
         DateFormat format = new SimpleDateFormat("dd.MM.yyyyHH:mm:ss");
-        File outputFile = new File(outputDir, format.format(new Date()));
-        try (OutputStream outputStream = new FileOutputStream(outputFile)) {
+        String fileName = String.format("%s.%s", format.format(new Date()), "gif");
+        try (OutputStream outputStream = new FileOutputStream(new File(outputDir, fileName))) {
             gifWriter.setOutput(outputStream);
             for (RenderedImage image : sourceImages) {
                 gifWriter.writeToSequence(new IIOImage(image, null, imageMetaData), imageWriteParam);

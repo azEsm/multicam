@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
+import java.io.IOException;
+
 @SpringBootApplication
 @ComponentScan(basePackageClasses = PhotoController.class)
 @Import(WebConfig.class)
@@ -30,7 +32,7 @@ public class Application {
     public ImagesWatchService watchService(
             @Value("${photo.dir}") String photoDir,
             @Value("${gif.dir}") String gifDir
-    ) {
+    ) throws IOException {
         return new ImagesWatchServiceImpl(photoDir, gifDir);
     }
 }
