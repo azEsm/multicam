@@ -18,6 +18,7 @@ public class ReadTask implements Runnable {
     private final Logger log = LoggerFactory.getLogger(ReadTask.class);
 
     private final CommPortIdentifier portId;
+    private final String destinationDirName;
     private final String imageName;
     private final CountDownLatch latch;
 
@@ -27,7 +28,8 @@ public class ReadTask implements Runnable {
             CountDownLatch latch
     ) {
         this.portId = portId;
-        this.imageName = String.format("%s/%s.%s", destinationDirName, String.valueOf(portId.getPortType()), "bmp");
+        this.destinationDirName = destinationDirName;
+        this.imageName = String.format("%s.%s", String.valueOf(portId.getPortType()), "bmp");
         this.latch = latch;
     }
 
@@ -66,7 +68,7 @@ public class ReadTask implements Runnable {
                 }
             }
 
-            new BmpImage(imageName, rgb2).save();
+            new BmpImage(destinationDirName, imageName, rgb2).save();
 
             log.info("Saved image: {}", imageName);
         } catch (Exception e) {

@@ -7,15 +7,13 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Arrays;
 
 public class ImagesWatchServiceImpl implements ImagesWatchService {
     private final Logger log = LoggerFactory.getLogger(ImagesWatchServiceImpl.class);
@@ -55,14 +53,14 @@ public class ImagesWatchServiceImpl implements ImagesWatchService {
                     continue;
                 }
 
-                List<String> fileNames = Files.list(photoDir).map(Path::toString).collect(Collectors.toList());
-                long filesCount = fileNames.size();
+                String[] files = photoDir.toFile().list();
 
-                if (filesCount < 4) {
+                //TODO properties
+                if (files == null || files.length < 4) {
                     continue;
                 }
 
-                new GifImage(new File(gifDir), fileNames).save();
+                new GifImage(new File(gifDir), Arrays.asList(files)).save();
             }
         }
     }

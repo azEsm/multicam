@@ -1,10 +1,18 @@
 package com.multicam.image;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class BmpImage implements Image {
+    private final Logger log = LoggerFactory.getLogger(BmpImage.class);
+
     private final String fileName;
     private final String outputDir;
     private final int[][] rgbValues;
@@ -19,12 +27,26 @@ public class BmpImage implements Image {
 
     @Override
     public void save() {
+        checkOutputDirectory();
         try (FileOutputStream fos = new FileOutputStream(new File(outputDir, fileName))) {
             saveFileHeader();
             saveInfoHeader(rgbValues.length, rgbValues[0].length);
             saveBitmapData(rgbValues);
 
             fos.write(bytes);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void checkOutputDirectory() {
+        Path outputDir = Paths.get(this.outputDir);
+        if (Files.exists(outputDir)) {
+            return;
+        }
+
+        try {
+            Files.createDirectories(outputDir);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
