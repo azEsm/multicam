@@ -18,7 +18,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,10 +31,10 @@ public class GifImage {
     private ImageWriteParam imageWriteParam;
     private IIOMetadata imageMetaData;
     private List<RenderedImage> sourceImages;
-    private File outputFile;
+    private File outputDir;
 
     public GifImage(
-            File outputFile,
+            File outputDir,
             List<String> sourceImages
     ) throws IOException {
         if (CollectionUtils.isEmpty(sourceImages)) {
@@ -41,7 +44,7 @@ public class GifImage {
         gifWriter = getWriter();
         imageWriteParam = gifWriter.getDefaultWriteParam();
 
-        this.outputFile = outputFile;
+        this.outputDir = outputDir;
 
         BufferedImage firstImage = ImageIO.read(new File(sourceImages.get(0)));
         ImageTypeSpecifier imageTypeSpecifier = ImageTypeSpecifier.createFromBufferedImageType(firstImage.getType());
@@ -92,6 +95,9 @@ public class GifImage {
     }
 
     public void save() {
+        checkOutputDirectory();
+        DateFormat format = new SimpleDateFormat("dd.MM.yyyyHH:mm:ss");
+        File outputFile = new File(outputDir, format.format(new Date()));
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
             gifWriter.setOutput(outputStream);
             for (RenderedImage image : sourceImages) {
@@ -100,6 +106,16 @@ public class GifImage {
             gifWriter.endWriteSequence();
         } catch (IOException e) {
             log.error("Writing GIF error", e);
+        }
+    }
+
+    private void checkOutputDirectory() {
+        if (outputDir.exists()) {
+            return;
+        }
+
+        if (!outputDir.mkdirs()) {
+            throw new IllegalStateException(String.format("Creating directory %s error", outputDir));
         }
     }
 
