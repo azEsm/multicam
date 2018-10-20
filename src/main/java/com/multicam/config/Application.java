@@ -24,8 +24,8 @@ public class Application {
     }
 
     @Bean
-    public PhotoService photoService(@Value("${photo.dir}") String destinationDir) {
-        return new PhotoServiceImpl(destinationDir);
+    public PhotoService photoService(@Value("${photo.dir}") String destinationDir, ImagesWatchService watchService) {
+        return new PhotoServiceImpl(destinationDir, watchService);
     }
 
     @Bean

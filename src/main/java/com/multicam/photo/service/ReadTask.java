@@ -8,9 +8,10 @@ import javax.comm.CommPortIdentifier;
 import javax.comm.SerialPort;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
-public class ReadTask implements Runnable {
+public class ReadTask implements Callable<Void> {
     private static final char[] COMMAND = {'*', 'R', 'D', 'Y', '*'};
     private static final int WIDTH = 320; //640;
     private static final int HEIGHT = 240; //480;
@@ -29,11 +30,11 @@ public class ReadTask implements Runnable {
     ) {
         this.portId = portId;
         this.destinationDirName = destinationDirName;
-        this.imageName = String.format("%s.%s", String.valueOf(portId.getPortType()), "bmp");
+        this.imageName = String.format("photo%s.%s", String.valueOf(portId.getName()).replaceAll("COM", ""), "bmp");
         this.latch = latch;
     }
 
-    public void run() {
+    public Void call() {
         awaitAllTasks();
         int[][] rgb = new int[HEIGHT][WIDTH];
         int[][] rgb2 = new int[WIDTH][HEIGHT];
@@ -74,6 +75,7 @@ public class ReadTask implements Runnable {
         } catch (Exception e) {
             log.error(String.format("image %s save error", imageName), e);
         }
+        return null;
     }
 
     private void awaitAllTasks() {

@@ -1,57 +1,56 @@
 package com.multicam.photo.service;
 
+import com.multicam.gifer.ImagesWatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.comm.CommPortIdentifier;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class PhotoServiceImpl implements PhotoService {
 
-    //TODO properties
-    private static final List<String> PORT_NAMES = Arrays.asList(
-            "COM4",
-            "COM5",
-            "COM6",
-            "COM7"
-    );
-
     private final Logger log = LoggerFactory.getLogger(PhotoServiceImpl.class);
     private final String destinationDir;
+    private final ImagesWatchService watchService;
 
-    public PhotoServiceImpl(String destinationDir) {
+    public PhotoServiceImpl(String destinationDir, ImagesWatchService watchService) {
         this.destinationDir = destinationDir;
+        this.watchService = watchService;
     }
 
     @Override
     public void makePhoto() {
         CountDownLatch latch = new CountDownLatch(1);
-        Set<Runnable> tasks = buildTasks(latch);
-        runTasks(tasks, latch);
+        Set<Callable<Void>> tasks = buildTasks(latch);
+        try {
+            runTasksAndWait(tasks, latch);
+            watchService.start();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
-    private Set<Runnable> buildTasks(CountDownLatch latch) {
-        Set<Runnable> tasks = new HashSet<>();
+    private Set<Callable<Void>> buildTasks(CountDownLatch latch) {
+        Set<Callable<Void>> tasks = new HashSet<>();
         List<CommPortIdentifier> availablePorts = loadAvailablePorts();
 
-        for (String portName : PORT_NAMES) {
-            for (CommPortIdentifier port : availablePorts) {
-                if (portName.equals(port.getName())) {
-                    ReadTask task = new ReadTask(
-                            port,
-                            destinationDir,
-                            latch
-                    );
-                    log.info("task created. port {}", port);
-                    tasks.add(task);
-                }
-            }
-
+        for (CommPortIdentifier port : availablePorts) {
+            ReadTask task = new ReadTask(
+                    port,
+                    destinationDir,
+                    latch
+            );
+            log.info("task created. port {}", port.getName());
+            tasks.add(task);
         }
 
         return tasks;
@@ -68,10 +67,13 @@ public class PhotoServiceImpl implements PhotoService {
      * @param tasks
      * @param latch
      */
-    private void runTasks(Set<Runnable> tasks, CountDownLatch latch) {
-        for (Runnable task : tasks) {
-            new Thread(task).start();
-        }
+    private void runTasksAndWait(Set<Callable<Void>> tasks, CountDownLatch latch) throws InterruptedException, ExecutionException {
+        ExecutorService es = Executors.newFixedThreadPool(4);
+        List<Future<Void>> tasksResults = es.invokeAll(tasks);
         latch.countDown();
+
+        for (Future<Void> taskResult : tasksResults) {
+            taskResult.get();
+        }
     }
 }

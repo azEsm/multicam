@@ -99,6 +99,7 @@ public class GifImage {
         checkOutputDirectory();
         DateFormat format = new SimpleDateFormat("dd.MM.yyyyHH:mm:ss");
         String fileName = String.format("%s.%s", format.format(new Date()), "gif");
+        log.info("GIF file name {}", fileName);
         try (OutputStream outputStream = new FileOutputStream(new File(outputDir, fileName))) {
             gifWriter.setOutput(outputStream);
 
@@ -112,6 +113,7 @@ public class GifImage {
             }
 
             gifWriter.endWriteSequence();
+            log.info("GIF {} created", fileName);
         } catch (IOException e) {
             log.error("Writing GIF error", e);
         }
