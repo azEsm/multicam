@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 public class GifImage {
     private final Logger log = LoggerFactory.getLogger(GifImage.class);
@@ -100,9 +101,16 @@ public class GifImage {
         String fileName = String.format("%s.%s", format.format(new Date()), "gif");
         try (OutputStream outputStream = new FileOutputStream(new File(outputDir, fileName))) {
             gifWriter.setOutput(outputStream);
-            for (RenderedImage image : sourceImages) {
-                gifWriter.writeToSequence(new IIOImage(image, null, imageMetaData), imageWriteParam);
+
+            ListIterator<RenderedImage> iterator = sourceImages.listIterator();
+            while (iterator.hasNext()) {
+                gifWriter.writeToSequence(new IIOImage(iterator.next(), null, imageMetaData), imageWriteParam);
             }
+
+            while (iterator.hasPrevious()) {
+                gifWriter.writeToSequence(new IIOImage(iterator.previous(), null, imageMetaData), imageWriteParam);
+            }
+
             gifWriter.endWriteSequence();
         } catch (IOException e) {
             log.error("Writing GIF error", e);
