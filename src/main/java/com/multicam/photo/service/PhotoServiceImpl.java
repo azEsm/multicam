@@ -1,6 +1,5 @@
 package com.multicam.photo.service;
 
-import com.multicam.photo.io.ReadTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

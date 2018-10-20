@@ -1,4 +1,4 @@
-package com.multicam.photo.io;
+package com.multicam.photo.service;
 
 import com.multicam.image.BmpImage;
 import org.slf4j.Logger;
